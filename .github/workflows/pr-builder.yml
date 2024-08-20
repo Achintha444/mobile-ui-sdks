@@ -49,13 +49,20 @@ jobs:
         # with:
         #   token: ${{ env.GH_TOKEN }}
         #   fetch-depth: 0
+    
+      - name: Check for Android changes
+        id: check_changes
+        run: |
+          git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.sha }} | grep -q './android' && echo "android_changed=true" >> $GITHUB_OUTPUT || echo "android_changed=false" >> $GITHUB_OUTPUT
 
       - name: ☕️ Set up Adopt JDK 17
+        if: steps.check_changes.outputs.android_changed == 'true'
         uses: actions/setup-java@v3
         with:
           java-version: "17"
           distribution: "adopt"
 
       - name: 🚧 Build Asgardeo Android SDK
+        if: steps.check_changes.outputs.android_changed == 'true'
         working-directory: .github/workflows/scripts/android
         run: bash ./android_sdk_build.sh
